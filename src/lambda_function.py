@@ -300,7 +300,7 @@ def update_games():
         )
 
         updated.append(
-            f'Game ID {game["game_id"]} had the winner set to {winning_team}'
+            f'Game ID {game["game_id"]} had the winner set to {winning_team}\n.'
         )
 
         cursor.execute(
@@ -388,7 +388,7 @@ def prepare_games():
         )
 
         prepared.append(
-            f'{game["away_name"]} @ {game["home_name"]}, game ID {game["game_id"]}'
+            f'{game["away_name"]} @ {game["home_name"]}, game ID {game["game_id"]}\n.'
         )
 
         cursor.execute(sql, record_to_insert)
