@@ -2,6 +2,8 @@
 
 In the world of [sabermetrics](https://en.wikipedia.org/wiki/Sabermetrics), traditional stats such as pitcher's earned run average (ERA) and win-loss records have lost some of their weight as success predictors in the MLB. This project aims to determine just how accurate, or inaccurate, ERA and win-loss records are in determing success.
 
+This project is hosted on AWS and takes advantage of its lambda functionality, its S3 buckets, and its RDS. See more in [architecture](#architecture)
+
 ## What Does This Project Do?
 
 In short, this project is two phases:
@@ -35,8 +37,8 @@ This is currently the current architecture project.
 
 ## Future Architecture
 
-> Note that this diagram may display weird if you have "Dark Mode" on
-
 Once the data is collected, I anticipate the architecture looking similar to:
+
+> Note that this diagram may display weird if you have "Dark Mode" on
 
 ![future_arch](resources/future_architecture_diagram.png)
