@@ -2,7 +2,7 @@
 
 In the world of [sabermetrics](https://en.wikipedia.org/wiki/Sabermetrics), traditional stats such as pitcher's earned run average (ERA) and win-loss records have lost some of their weight as success predictors in the MLB. This project aims to determine just how accurate, or inaccurate, ERA and win-loss records are in determing success.
 
-This project is hosted on AWS and takes advantage of its lambda functionality, its S3 buckets, and its RDS. See more in [architecture](#architecture).
+This project is hosted on AWS and takes advantage of its lambda functionality, its S3 buckets, and its RDS. See more in [Architecture](#architecture).
 
 ## What Does This Project Do?
 
@@ -25,7 +25,7 @@ The second part of this project will be building the model to be used to predict
 
 > **Why not use the 2022 season to train for the 2023 season?**
 >
-> I need to get the data going *into* the game, and unfortunately there is no way to access what, say, John Smith's ERA was before pitching on July 4th, 2022. So, I will be logging each day's matchups with the pitchers' stats going into the game and will then update who won and lost the game the next day.
+> I need to get the data *going into* the game, and unfortunately there is no way to access what, say, John Smith's ERA was before pitching on July 4th, 2022. So, I will be logging each day's matchups with the pitchers' stats going into the game and will then update who won and lost the game the next day.
 
 ## Architecture
 
