@@ -27,9 +27,15 @@ The second part of this project will be building the model to be used to predict
 
 ## Architeture
 
+This is currently the current architecture project.
+
+> Note that this diagram may display weird if you have "Dark Mode" on
+
 ![arch](resources/architecture_diagram.png)
 
 ## Future Architecture
+
+> Note that this diagram may display weird if you have "Dark Mode" on
 
 Once the data is collected, I anticipate the architecture looking similar to:
 
