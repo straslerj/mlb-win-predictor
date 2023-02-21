@@ -13,7 +13,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 """
-This script will run at 5:00 AM.
+This script will run daily at 5:00 AM.
 
 Tasks include:
  - Adding the day's games to the database
