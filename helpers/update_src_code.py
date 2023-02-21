@@ -28,6 +28,6 @@ shutil.make_archive(temp.name, "zip", "../src/")
 s3 = boto3.resource("s3")
 s3.meta.client.upload_file(
     Filename=f"{temp.name}.zip",
-    Bucket="mlb-win-predictor-src-code",
+    Bucket=os.getenv("AWS_S3_SRC_CODE_BUCKET"),
     Key="src-script.zip",
 )
