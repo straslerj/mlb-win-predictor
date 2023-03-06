@@ -56,7 +56,7 @@ def lookup_player(player: str) -> str:
     try:
         return statsapi.lookup_player(player)[0]["id"]
     except IndexError:
-        print(f"Unable to get an ID for pitcher {player}")
+        print(f"Unable to get ID for pitcher {player}")
         return None
 
 
@@ -77,7 +77,7 @@ def get_ERA(pitcher: str) -> float:
 
             return format(float(pitcher_stats["era"]), ".2f")
         except IndexError:
-            print(f"Unable to get an ERA for pitcher {pitcher}")
+            print(f"Unable to get ERA for pitcher {pitcher}")
             return None
     else:
         return None
@@ -102,7 +102,7 @@ def get_win_percentage(pitcher: str) -> float:
             except ValueError:
                 return None
         except IndexError:
-            print(f"Unable to get a win percentage for pitcher {pitcher}")
+            print(f"Unable to get win percentage for pitcher {pitcher}")
             return None
     else:
         return None
@@ -127,7 +127,7 @@ def get_losses(pitcher: str) -> int:
             except ValueError:
                 return None
         except IndexError:
-            print(f"Unable to get a losses for pitcher {pitcher}")
+            print(f"Unable to get losses for pitcher {pitcher}")
             return None
     else:
         return None
@@ -152,7 +152,7 @@ def get_wins(pitcher: str) -> int:
             except ValueError:
                 return None
         except IndexError:
-            print(f"Unable to get a wins for pitcher {pitcher}")
+            print(f"Unable to get wins for pitcher {pitcher}")
             return None
     else:
         return None
