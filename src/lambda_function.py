@@ -190,6 +190,153 @@ def get_IP(pitcher: str) -> float:
         return None
 
 
+def get_K9(pitcher: str) -> float:
+    """
+    Gets the strikeouts per 9 innings.
+
+    :param pitcher: the name of the pitcher whose IP are being accessed
+    :returns: the K/9 as a float; None if pitcher's ID cannot be found
+    """
+    pitcher_id = lookup_player(pitcher)
+
+    if pitcher_id:
+        try:
+            pitcher_stats = statsapi.player_stat_data(
+                personId=pitcher_id, group="pitching", type="season", sportId=1
+            )["stats"][0]["stats"]
+            try:
+                K9 = pitcher_stats["strikeoutsPer9Inn"]
+                return float(K9)
+            except ValueError:
+                return None
+        except IndexError:
+            print(f"Unable to get K/9 for pitcher {pitcher}")
+            return None
+    else:
+        return None
+
+
+def get_BB9(pitcher: str) -> float:
+    """
+    Gets the number of walks per 9 innings
+
+    :param pitcher: the name of the pitcher whose IP are being accessed
+    :returns: the BB/9 pitched as a float; None if pitcher's ID cannot be found
+    """
+    pitcher_id = lookup_player(pitcher)
+
+    if pitcher_id:
+        try:
+            pitcher_stats = statsapi.player_stat_data(
+                personId=pitcher_id, group="pitching", type="season", sportId=1
+            )["stats"][0]["stats"]
+            try:
+                bb9 = pitcher_stats["walksPer9Inn"]
+                return float(bb9)
+            except ValueError:
+                return None
+        except IndexError:
+            print(f"Unable to get BB/9 for pitcher {pitcher}")
+            return None
+    else:
+        return None
+
+
+def get_K_BB_diff(pitcher: str) -> float:
+    """
+    Gets the strikeout percentage minus the walk percentage of a pitcher
+
+    :param pitcher: the name of the pitcher whose IP are being accessed
+    :returns: the K% - BB% as a float; None if pitcher's ID cannot be found
+    """
+    pitcher_id = lookup_player(pitcher)
+
+    if pitcher_id:
+        try:
+            pitcher_stats = statsapi.player_stat_data(
+                personId=pitcher_id, group="pitching", type="season", sportId=1
+            )["stats"][0]["stats"]
+            try:
+                k_perc = float(pitcher_stats["strikeouts"]) / float(
+                    pitcher_stats["battersFaced"]
+                )
+                bb_perc = float(pitcher_stats["walks"]) / float(
+                    pitcher_stats["battersFaced"]
+                )
+                diff = k_perc - bb_perc
+                return diff
+            except ValueError:
+                return None
+        except IndexError:
+            print(f"Unable to get K% - BB% for pitcher {pitcher}")
+            return None
+    else:
+        return None
+
+
+def get_WHIP(pitcher: str) -> float:
+    """
+    Gets the walks and hits per innings pitched for a pitcher.
+
+    :param pitcher: the name of the pitcher whose IP are being accessed
+    :returns: the WHIP as a float; None if pitcher's ID cannot be found
+    """
+    pitcher_id = lookup_player(pitcher)
+
+    if pitcher_id:
+        try:
+            pitcher_stats = statsapi.player_stat_data(
+                personId=pitcher_id, group="pitching", type="season", sportId=1
+            )["stats"][0]["stats"]
+            try:
+                WHIP = pitcher_stats["whip"]
+                return float(WHIP)
+            except ValueError:
+                return None
+        except IndexError:
+            print(f"Unable to get WHIP for pitcher {pitcher}")
+            return None
+    else:
+        return None
+
+
+def get_BABIP(pitcher: str) -> float:
+    """
+    Gets the batting average on balls in play for a pitcher.
+
+    More on BABIP: https://library.fangraphs.com/pitching/babip/
+
+    :param pitcher: the name of the pitcher whose IP are being accessed
+    :returns: the BABIP as a float; None if pitcher's ID cannot be found
+    """
+    pitcher_id = lookup_player(pitcher)
+
+    if pitcher_id:
+        try:
+            pitcher_stats = statsapi.player_stat_data(
+                personId=pitcher_id, group="pitching", type="season", sportId=1
+            )["stats"][0]["stats"]
+            try:
+                hits = float(pitcher_stats["hits"])
+                home_runs = float(pitcher_stats["homeRuns"])
+                at_bats = float(pitcher_stats["atBats"])
+                strikeouts = float(pitcher_stats["strikeOuts"])
+                sac_flies = float(pitcher_stats["sacFlies"])
+
+                BABIP = (hits - home_runs) / (
+                    at_bats - strikeouts - home_runs + sac_flies
+                )
+
+                return BABIP
+            except ValueError:
+                return None
+        except IndexError:
+            print(f"Unable to get BABIP for pitcher {pitcher}")
+            return None
+    else:
+        return None
+
+
 def config_struct_log(file_name: str) -> structlog:
     """
     Configures the structured logging.
@@ -209,14 +356,23 @@ def config_struct_log(file_name: str) -> structlog:
 
 
 def send_email():
+    prepared_html_list = ""
+    updated_html_list = ""
+
+    for game in prepared:
+        prepared_html_list = prepared_html_list + f"<li>{game}</li>"
+
+    for game in updated:
+        updated_html_list = updated_html_list + f"<li>{game}</li>"
+
     html = f"""
         <h1 id="mlb-pipeline-today-">MLB Pipeline {datetime.now().strftime("%m/%d/%Y")}</h1>
             <h2 id="games-updated">Games Updated</h2>
                 <p>There were {len(updated)} games updated:</p>
-                <p>{[x for x in updated]}</p>
+                <p><ul>{updated_html_list}</ul></p>
             <h2 id="games-prepared">Games Prepared</h2>
                 <p>There were {len(prepared)} games added:</p>
-                <p>{[x for x in prepared]}</p>
+                <p><ul>{prepared_html_list}</ul></p>
             <p><em>Email sent {datetime.now().strftime("%m/%d/%Y %H:%M:%S")}</em></p>
         """
 
@@ -288,11 +444,14 @@ def update_games():
     for i, game in enumerate(sched):
         print(f"Updating: {i + 1} of {len(sched)}...")
 
-        winning_team = (
-            statsapi.lookup_team(game["winning_team"])[0]["id"]
-            if "winning_team" in game
-            else None
-        )
+        if "winning_team" in game:
+            winning_team = (
+                statsapi.lookup_team(game["winning_team"])[0]["id"]
+                if game["winning_team"] != "Tie"
+                else None
+            )
+        else:
+            winning_team = None
 
         record_to_insert = (
             winning_team,
@@ -355,7 +514,7 @@ def prepare_games():
 
     cursor = aws_psql_conn.cursor()
 
-    sql = f"INSERT INTO {TABLE_NAME} (game_id, home_team_id, home_team_name, away_team_id, away_team_name, home_pitcher, home_pitcher_id, home_pitcher_era, home_pitcher_win_percentage, home_pitcher_wins, home_pitcher_losses, home_pitcher_innings_pitched, away_pitcher, away_pitcher_id, away_pitcher_era, away_pitcher_win_percentage, away_pitcher_wins, away_pitcher_losses, away_pitcher_innings_pitched) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+    sql = f"INSERT INTO {TABLE_NAME} (game_id, home_team_id, home_team_name, away_team_id, away_team_name, home_pitcher, home_pitcher_id, home_pitcher_era, home_pitcher_win_percentage, home_pitcher_wins, home_pitcher_losses, home_pitcher_innings_pitched, away_pitcher, away_pitcher_id, away_pitcher_era, away_pitcher_win_percentage, away_pitcher_wins, away_pitcher_losses, away_pitcher_innings_pitched, home_pitcher_k_nine, home_pitcher_bb_nine, home_pitcher_k_bb_diff, home_pitcher_whip, home_pitcher_babip, away_pitcher_k_nine, away_pitcher_bb_nine, away_pitcher_k_bb_diff, away_pitcher_whip, away_pitcher_babip) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
     for i, game in enumerate(sched):
         print(f"Preparing: {i + 1} of {len(sched)}...")
         home_probable_pitcher = game["home_probable_pitcher"]
@@ -385,6 +544,16 @@ def prepare_games():
             get_wins(away_probable_pitcher),
             get_losses(away_probable_pitcher),
             get_IP(away_probable_pitcher),
+            get_K9(home_probable_pitcher),
+            get_BB9(home_probable_pitcher),
+            get_K_BB_diff(home_probable_pitcher),
+            get_WHIP(home_probable_pitcher),
+            get_BABIP(home_probable_pitcher),
+            get_K9(away_probable_pitcher),
+            get_BB9(away_probable_pitcher),
+            get_K_BB_diff(away_probable_pitcher),
+            get_WHIP(away_probable_pitcher),
+            get_BABIP(away_probable_pitcher),
         )
 
         prepared.append(
