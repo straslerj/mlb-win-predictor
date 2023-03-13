@@ -447,11 +447,11 @@ def update_games():
         try:
             winning_team = (
                 statsapi.lookup_team(game["winning_team"])[0]["id"]
-                if game["winning_team"] != "Tie"
+                if game["winning_team"] in game
                 else None
             )
-        except IndexError:
-            print("There is no winning team, implying that this game may have ended in a tie.")
+        except:
+            print("There is no winning team, implying that this game may have ended in a tie. Winner has been set to None.")
             winning_team = None
 
         record_to_insert = (
