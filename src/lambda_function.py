@@ -257,10 +257,10 @@ def get_K_BB_diff(pitcher: str) -> float:
                 personId=pitcher_id, group="pitching", type="season", sportId=1
             )["stats"][0]["stats"]
             try:
-                k_perc = float(pitcher_stats["strikeouts"]) / float(
+                k_perc = float(pitcher_stats["strikeOuts"]) / float(
                     pitcher_stats["battersFaced"]
                 )
-                bb_perc = float(pitcher_stats["walks"]) / float(
+                bb_perc = float(pitcher_stats["baseOnBalls"]) / float(
                     pitcher_stats["battersFaced"]
                 )
                 diff = k_perc - bb_perc
@@ -421,6 +421,35 @@ def send_error_email(method, error):
     print(f"\nEmail sent to {EMAIL_TO}.")
 
 
+def send_error_email(method, error):
+    html = f"""
+        <h1 id="mlb-pipeline-today-">MLB Pipeline {datetime.now().strftime("%m/%d/%Y")}</h1>
+            <p>There was an error when trying to run the pipeline. Please see below:</p>
+            <h2 id="where">Where</h2>
+            <p>The error occurred in {method}</p>
+            <h2 id="what">What</h2>
+            <p>Error message: </br> {error}</p>
+            <h2 id="when">When</h2>
+            <p>The error occurred at {datetime.now()}</p>
+
+        """
+
+    email_message = MIMEMultipart()
+    email_message["From"] = EMAIL_FROM
+    email_message["To"] = EMAIL_TO
+    email_message["Subject"] = f"MLB Pipeline ERROR"
+
+    email_message.attach(MIMEText(html, "html"))
+    email_string = email_message.as_string()
+
+    context = ssl.create_default_context()
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, context=context) as server:
+        server.login(EMAIL_FROM, EMAIL_PASSWORD)
+        server.sendmail(EMAIL_FROM, EMAIL_TO, email_string)
+
+    print(f"\nEmail sent to {EMAIL_TO}.")
+
+
 def update_games():
     start_time = time.time()
 
@@ -447,11 +476,13 @@ def update_games():
         try:
             winning_team = (
                 statsapi.lookup_team(game["winning_team"])[0]["id"]
-                if game["winning_team"] in game
+                if "winning_team" in game
                 else None
             )
         except:
-            print("There is no winning team, implying that this game may have ended in a tie. Winner has been set to None.")
+            print(
+                "There is no winning team, implying that this game may have ended in a tie. Winner has been set to None."
+            )
             winning_team = None
 
         record_to_insert = (
