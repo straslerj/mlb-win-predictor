@@ -19,6 +19,16 @@ Tasks include:
  - Adding the day's games to the database
  - Updating yesterday's games with the winning team
 """
+# This code makes the script work on PythonAnywhere
+config_file_path = "config.env"
+if os.path.exists(config_file_path):
+    # Read environment variables from the file
+    with open(config_file_path, "r") as file:
+        for line in file:
+            if not line.startswith("#") and "=" in line:
+                key, value = line.strip().split("=", 1)
+                os.environ[key.strip()] = value.strip()
+
 EMAIL_FROM = os.getenv("MLB_GAMES_EMAIL_FROM")
 EMAIL_PASSWORD = os.getenv("MLB_GAMES_EMAIL_PASSWORD")
 EMAIL_TO = os.getenv("MLB_GAMES_EMAIL_TO")
