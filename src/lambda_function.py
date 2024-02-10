@@ -19,31 +19,30 @@ Tasks include:
  - Adding the day's games to the database
  - Updating yesterday's games with the winning team
 """
-
 EMAIL_FROM = os.getenv("MLB_GAMES_EMAIL_FROM")
 EMAIL_PASSWORD = os.getenv("MLB_GAMES_EMAIL_PASSWORD")
 EMAIL_TO = os.getenv("MLB_GAMES_EMAIL_TO")
-AWS_S3_BUCKET_NAME = os.getenv("AWS_S3_BUCKET_NAME")
+S3_BUCKET_NAME = os.getenv("S3_BUCKET_NAME")
+PSQL_CONNECTION_STRING = os.getenv("PSQL_CONNECTION_STRING")
 TABLE_NAME = os.getenv("MLB_DB_TABLE_NAME")
+LOGS_ACCESS_KEY_ID = os.getenv("LOGS_ACCESS_KEY_ID")
+LOGS_SECRET_ACCESS_KEY = os.getenv("LOGS_SECRET_ACCESS_KEY")
+LOGS_ENDPOINT_URL = os.getenv("LOGS_ENDPOINT_URL")
 
 current_time = str(datetime.now()).replace(" ", "_")[:19].replace(":", "-")
 updated = []
 prepared = []
 
-aws_client = boto3.client(
-    "s3",
-    aws_access_key_id=os.getenv("ACCESS_KEY_ID"),
-    aws_secret_access_key=os.getenv("SECRET_ACCESS_KEY"),
+s3 = boto3.resource(
+    service_name="s3",
+    aws_access_key_id=LOGS_ACCESS_KEY_ID,
+    aws_secret_access_key=LOGS_SECRET_ACCESS_KEY,
+    endpoint_url=LOGS_ENDPOINT_URL,
 )
-s3 = boto3.resource("s3")
 
-aws_psql_conn = psycopg2.connect(
-    database=os.getenv("AWS_PSQL_DB"),
-    user=os.getenv("AWS_PSQL_USER"),
-    password=os.getenv("AWS_PSQL_PASSWORD"),
-    host=os.getenv("AWS_PSQL_HOST"),
-    port=os.getenv("AWS_PSQL_PORT"),
-)
+connection_string = PSQL_CONNECTION_STRING
+
+aws_psql_conn = psycopg2.connect(connection_string)
 
 
 def lookup_player(player: str) -> str:
@@ -464,7 +463,6 @@ def update_games():
         sched = statsapi.schedule(date=yesterday)
     except:
         print(f"An error occurred when trying to get games for {yesterday}")
-        return None
     # sched = statsapi.schedule(date="8/25/2022")  # use for testing purposes
 
     cursor = aws_psql_conn.cursor()
@@ -517,12 +515,10 @@ def update_games():
 
     s3.meta.client.upload_file(
         Filename=temp.name,
-        Bucket=AWS_S3_BUCKET_NAME,
+        Bucket=S3_BUCKET_NAME,
         Key=key,
     )
-    print(
-        f"{temp.name} has been successfully uploaded to {AWS_S3_BUCKET_NAME} as {key}\n"
-    )
+    print(f"{temp.name} has been successfully uploaded to {S3_BUCKET_NAME} as {key}\n")
     print(
         f"------------------------------------------------\nFinished updating games at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.\nTotal time to update games: {timedelta(seconds=(time.time() - start_time))}\n------------------------------------------------"
     )
@@ -559,18 +555,22 @@ def prepare_games():
             game["away_id"],
             game["away_name"],
             home_probable_pitcher,
-            statsapi.lookup_player(home_probable_pitcher)[0]["id"]
-            if statsapi.lookup_player(home_probable_pitcher)
-            else None,
+            (
+                statsapi.lookup_player(home_probable_pitcher)[0]["id"]
+                if statsapi.lookup_player(home_probable_pitcher)
+                else None
+            ),
             get_ERA(home_probable_pitcher),
             get_win_percentage(home_probable_pitcher),
             get_wins(home_probable_pitcher),
             get_losses(home_probable_pitcher),
             get_IP(home_probable_pitcher),
             away_probable_pitcher,
-            statsapi.lookup_player(away_probable_pitcher)[0]["id"]
-            if statsapi.lookup_player(away_probable_pitcher)
-            else None,
+            (
+                statsapi.lookup_player(away_probable_pitcher)[0]["id"]
+                if statsapi.lookup_player(away_probable_pitcher)
+                else None
+            ),
             get_ERA(away_probable_pitcher),
             get_win_percentage(away_probable_pitcher),
             get_wins(away_probable_pitcher),
@@ -611,19 +611,17 @@ def prepare_games():
 
     s3.meta.client.upload_file(
         Filename=temp.name,
-        Bucket=AWS_S3_BUCKET_NAME,
+        Bucket=S3_BUCKET_NAME,
         Key=key,
     )
-    print(
-        f"{temp.name} has been successfully uploaded to {AWS_S3_BUCKET_NAME} as {key}\n"
-    )
+    print(f"{temp.name} has been successfully uploaded to {S3_BUCKET_NAME} as {key}\n")
 
     print(
         f"------------------------------------------------\nFinished preparing games at {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}.\nTotal time to prepare games: {timedelta(seconds=(time.time() - start_time))}\n------------------------------------------------"
     )
 
 
-def lambda_handler(event, context):
+def main():
     error_occurred = False
     try:
         print("Trying to update games...")
@@ -656,3 +654,6 @@ def lambda_handler(event, context):
                 "There has been an error when running the script. Check logs for further status updates."
             ),
         }
+
+
+main()
