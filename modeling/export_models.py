@@ -1,8 +1,13 @@
 import boto3
 import datetime
 import os
-import pickle
 import tempfile
+
+MODEL_ACCESS_KEY_ID = os.getenv("MODEL_ACCESS_KEY_ID")
+MODEL_SECRET_ACCESS_KEY = os.getenv("MODEL_SECRET_ACCESS_KEY")
+LOGS_ENDPOINT_URL = os.getenv("LOGS_ENDPOINT_URL")
+MODEL_BUCKET = os.getenv("MODEL_BUCKET")
+
 
 now = datetime.datetime.now()
 current_time = str(now).replace(" ", "_")[:19].replace(":", "-")
@@ -20,22 +25,19 @@ temp.flush()
 
 temp.seek(0)
 
-client = boto3.client(
-    "s3",
-    aws_access_key_id=os.getenv("ACCESS_KEY_ID"),
-    aws_secret_access_key=os.getenv("SECRET_ACCESS_KEY"),
+s3 = boto3.resource(
+    service_name="s3",
+    aws_access_key_id=MODEL_ACCESS_KEY_ID,
+    aws_secret_access_key=MODEL_SECRET_ACCESS_KEY,
+    endpoint_url=LOGS_ENDPOINT_URL,
 )
 
-s3 = boto3.resource("s3")
 key = f"{current_time}-model.pickle"
+data = open(temp.name, "rb")
 
-s3.meta.client.upload_file(
-    Filename=temp.name,
-    Bucket=os.getenv("AWS_S3_MODEL_SRC"),
-    Key=key,
-)
+s3.Bucket(MODEL_BUCKET).put_object(Key=f"{key}", Body=data)
 
-print(f"File uploaded to bucket {os.getenv('AWS_S3_MODEL_SRC')} as {key}")
+print(f"File uploaded to bucket {MODEL_BUCKET} as {key}")
 
 temp.close()
 os.remove(temp.name)
