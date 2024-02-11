@@ -35,6 +35,8 @@ This is currently the current architecture project.
 
 ![alt text](resources/updated-arch-diagram.png)
 
+*Front end source code can be viewed at [github.com/straslerj/mlb-win-predictor-front-end](https://github.com/straslerj/mlb-win-predictor-front-end).*
+
 Previously, the project was hosted on AWS. I have since migrated to all free services. When the project was hosted on AWS, it looked like this:
 
 ![arch](resources/aws-arch.jpg)
