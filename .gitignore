@@ -1,3 +1,4 @@
 modeling/dataset_current.parquet
 modeling/model_objects/current_models.pkl
 src/config.env
+resources/.$updated-arch-diagram.png.dtmp

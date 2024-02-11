@@ -33,7 +33,7 @@ This is currently the current architecture project.
 
 > Note that this diagram may display weird if you have "Dark Mode" on
 
-![alt text](resources/updated-arch-diagram.drawio.png)
+![alt text](resources/updated-arch-diagram.png)
 
 Previously, the project was hosted on AWS. I have since migrated to all free services. When the project was hosted on AWS, it looked like this:
 
