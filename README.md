@@ -31,8 +31,6 @@ The second part of this project will be building the model to be used to predict
 
 This is currently the current architecture project.
 
-> Note that this diagram may display weird if you have "Dark Mode" on
-
 ![alt text](resources/updated-arch-diagram.png)
 
 *Front end source code can be viewed at [github.com/straslerj/mlb-win-predictor-front-end](https://github.com/straslerj/mlb-win-predictor-front-end).*
