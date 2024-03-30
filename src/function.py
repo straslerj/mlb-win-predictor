@@ -498,8 +498,9 @@ def update_games():
             game["game_id"],
         )
 
+        winning_team_name = statsapi.lookup_team(winning_team)[0]["name"]
         updated.append(
-            f'Game ID {game["game_id"]} had the winner set to {winning_team}.'
+            f'{winning_team_name} won Game {game["game_id"]}. The winner has been set to {winning_team}.'
         )
 
         cursor.execute(
@@ -507,6 +508,7 @@ def update_games():
             (record_to_insert),
         )
         aws_psql_conn.commit()
+
         print(
             cursor.rowcount,
             f"record(s) inserted successfully into {TABLE_NAME} table.\n",
@@ -598,24 +600,36 @@ def prepare_games():
             get_BABIP(away_probable_pitcher),
         )
 
-        prepared.append(
-            f'{game["away_name"]} @ {game["home_name"]}, game ID {game["game_id"]}.'
-        )
+        try:
+            cursor.execute(sql, record_to_insert)
+            aws_psql_conn.commit()
+            print(
+                cursor.rowcount,
+                f"record(s) inserted successfully into {TABLE_NAME} table.\n",
+            )
+            prepared.append(
+                f'{game["away_name"]} @ {game["home_name"]}, game ID {game["game_id"]}.'
+            )
+            logger.info(
+                event="game_prepared",
+                game_id=game["game_id"],
+                away_team=game["away_name"],
+                home_team=game["home_name"],
+                game_date=game["game_date"],
+            )
 
-        cursor.execute(sql, record_to_insert)
-        aws_psql_conn.commit()
-        print(
-            cursor.rowcount,
-            f"record(s) inserted successfully into {TABLE_NAME} table.\n",
-        )
-
-        logger.info(
-            event="game_prepared",
-            game_id=game["game_id"],
-            away_team=game["away_name"],
-            home_team=game["home_name"],
-            game_date=game["game_date"],
-        )
+        except Exception as e:
+            print(f"Unable to insert record with game ID {game['game_id']}: {e}")
+            prepared.append(
+                f'{game["away_name"]} @ {game["home_name"]}, game ID {game["game_id"]} (rescheduled).'
+            )
+            logger.info(
+                event="error_preparing_game",
+                game_id=game["game_id"],
+                away_team=game["away_name"],
+                home_team=game["home_name"],
+                game_date=game["game_date"],
+            )
 
     key = f"{current_time}_prepared_games"
 
