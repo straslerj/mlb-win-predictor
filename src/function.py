@@ -487,7 +487,7 @@ def update_games():
                 if "winning_team" in game
                 else None
             )
-        except:
+        except Exception:
             print(
                 "There is no winning team, implying that this game may have ended in a tie. Winner has been set to None."
             )
@@ -498,7 +498,10 @@ def update_games():
             game["game_id"],
         )
 
-        winning_team_name = statsapi.lookup_team(winning_team)[0]["name"]
+        if winning_team is not None:
+            winning_team_name = statsapi.lookup_team(winning_team)[0]["name"]
+        else:
+            winning_team_name = "n/a"
         updated.append(
             f'{winning_team_name} won Game {game["game_id"]}. The winner has been set to {winning_team}.'
         )
