@@ -622,6 +622,7 @@ def prepare_games():
             )
 
         except Exception as e:
+            aws_psql_conn.rollback()
             print(f"Unable to insert record with game ID {game['game_id']}: {e}")
             prepared.append(
                 f'{game["away_name"]} @ {game["home_name"]}, game ID {game["game_id"]} (rescheduled).'
